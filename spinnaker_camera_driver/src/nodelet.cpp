@@ -634,6 +634,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
               image_numbered_msgs::ImageNumberedPtr image(
                   new image_numbered_msgs::ImageNumbered());
               image->image = wfov_image->image;
+              image->header = wfov_image->header;
               image->number = spinnaker_.getFrameCounter();
               // image->image.header.stamp += imu_time_offset_;
               img_numbered_pub_.publish(image);
