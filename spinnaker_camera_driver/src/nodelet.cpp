@@ -686,7 +686,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             // Publish the message using standard image transport
             if (should_publish) {
               it_pub_.publish(image, ci_);
-              publishMonoImage(image, ci_);
+              if(publish_mono_) {
+                publishMonoImage(image, ci_);
+              }
             }
           } catch (CameraTimeoutException& e) {
             NODELET_WARN("%s", e.what());
@@ -726,7 +728,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
           shiftTimestampToMidExposure(new_stamp, image_queue_exposure_us_);
       image_queue_->header.stamp += imu_time_offset_;
       it_pub_.publish(image_queue_, ci_);
-      publishMonoImage(image_queue_, ci_);
+      if(publish_mono_) {
+        publishMonoImage(image_queue_, ci_);
+      }
       image_queue_.reset();
       ROS_WARN_THROTTLE(60, "Publishing delayed image.");
     }
