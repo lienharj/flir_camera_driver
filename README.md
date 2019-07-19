@@ -25,6 +25,11 @@ sudo update-grub
 ```
 and reboot.
 
+Note! On Ubuntu 18.04 "nomodeset" can prevent the computer from recognizing additional monitors. Hence use the following instead
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash usbcore.usbfs_memory_mb=1000"
+
+```
 
 ## Other stuff
 
