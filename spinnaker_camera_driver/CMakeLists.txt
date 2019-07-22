@@ -54,7 +54,8 @@ target_link_libraries(SpinnakerCameraLib
                       Camera
                       ${Spinnaker_LIBRARIES}
                       ${catkin_LIBRARIES}
-                      ${OpenCV_LIBRARIES})
+                      ${OpenCV_LIBRARIES}
+                      usb-1.0)
 
 
 # Test Executable for Spinnaker
