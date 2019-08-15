@@ -118,17 +118,17 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
  private:
   /*!
-  * \brief Function that allows reconfiguration of the camera.
-  *
-  * This function serves as a callback for the dynamic reconfigure service.  It
-  * simply passes the configuration object
-  * to the driver to allow the camera to reconfigure.
-  * \param config  camera_library::CameraConfig object passed by reference.
-  * Values will be changed to those the driver
-  * is currently using.
-  * \param level driver_base reconfiguration level.  See
-  * driver_base/SensorLevels.h for more information.
-  */
+   * \brief Function that allows reconfiguration of the camera.
+   *
+   * This function serves as a callback for the dynamic reconfigure service.  It
+   * simply passes the configuration object
+   * to the driver to allow the camera to reconfigure.
+   * \param config  camera_library::CameraConfig object passed by reference.
+   * Values will be changed to those the driver
+   * is currently using.
+   * \param level driver_base reconfiguration level.  See
+   * driver_base/SensorLevels.h for more information.
+   */
 
   void paramCallback(const spinnaker_camera_driver::SpinnakerConfig& config,
                      uint32_t level) {
@@ -187,11 +187,11 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   }
 
   /*!
-  * \brief Connection callback to only do work when someone is listening.
-  *
-  * This function will connect/disconnect from the camera depending on who is
-  * using the output.
-  */
+   * \brief Connection callback to only do work when someone is listening.
+   *
+   * This function will connect/disconnect from the camera depending on who is
+   * using the output.
+   */
   void connectCb() {
     if (!pubThread_)  // We need to connect
     {
@@ -257,12 +257,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   }
 
   /*!
-  * \brief Serves as a psuedo constructor for nodelets.
-  *
-  * This function needs to do the MINIMUM amount of work to get the nodelet
-  * running.  Nodelets should not call blocking
-  * functions here.
-  */
+   * \brief Serves as a psuedo constructor for nodelets.
+   *
+   * This function needs to do the MINIMUM amount of work to get the nodelet
+   * running.  Nodelets should not call blocking
+   * functions here.
+   */
   void onInit() {
     // Get nodeHandles
     ros::NodeHandle& nh = getMTNodeHandle();
@@ -376,8 +376,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     pub_.reset(
         new diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage>(
             nh.advertise<wfov_camera_msgs::WFOVImage>("image", 5, cb2, cb2),
-            updater_, diagnostic_updater::FrequencyStatusParam(
-                          &min_freq_, &max_freq_, freq_tolerance, window_size),
+            updater_,
+            diagnostic_updater::FrequencyStatusParam(
+                &min_freq_, &max_freq_, freq_tolerance, window_size),
             diagnostic_updater::TimeStampStatusParam(min_acceptable,
                                                      max_acceptable)));
 
@@ -453,12 +454,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   }
 
   /*!
-  * \brief Function for the boost::thread to grabImages and publish them.
-  *
-  * This function continues until the thread is interupted.  Responsible for
-  * getting sensor_msgs::Image and publishing
-  * them.
-  */
+   * \brief Function for the boost::thread to grabImages and publish them.
+   *
+   * This function continues until the thread is interupted.  Responsible for
+   * getting sensor_msgs::Image and publishing
+   * them.
+   */
   void devicePoll() {
     ROS_INFO_ONCE("devicePoll");
 
@@ -694,7 +695,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   image_transport::CameraPublisher
       it_pub_;                       ///< CameraInfoManager ROS publisher
   ros::Publisher img_numbered_pub_;  ///< Image publisher that also publishes
-                                     ///the associated embedded frame number.
+                                     /// the associated embedded frame number.
   std::shared_ptr<
       diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage> >
       pub_;  ///< Diagnosed
@@ -713,7 +714,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   double max_freq_;
 
   SpinnakerCamera spinnaker_;      ///< Instance of the SpinnakerCamera library,
-                                   ///used to interface with the hardware.
+                                   /// used to interface with the hardware.
   sensor_msgs::CameraInfoPtr ci_;  ///< Camera Info message.
   std::string
       frame_id_;  ///< Frame id for the camera messages, defaults to 'camera'
@@ -736,7 +737,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   size_t roi_height_;    ///< Camera Info ROI height
   size_t roi_width_;     ///< Camera Info ROI width
   bool do_rectify_;  ///< Whether or not to rectify as if part of an image.  Set
-                     ///to false if whole image, and true if in
+                     /// to false if whole image, and true if in
                      /// ROI mode.
 
   // For GigE cameras:
