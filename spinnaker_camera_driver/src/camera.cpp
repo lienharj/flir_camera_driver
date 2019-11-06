@@ -108,6 +108,8 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     setProperty(node_map_, "ExposureMode", config.exposure_mode);
     setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
+    setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+
     // Set sharpness
     if (IsAvailable(node_map_->GetNode("SharpeningEnable"))) {
       setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
@@ -224,6 +226,9 @@ void Camera::setImageControlFormats(
 
   // Set Pixel Format
   setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+
+  // Set Color Processing 
+  setProperty(node_map_, "ColorProcessingAlgorithm", config.color_processing_algorithm);
 }
 
 void Camera::setGain(const float& gain) {

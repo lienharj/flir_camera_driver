@@ -327,26 +327,38 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
       // Since it takes time to initialize (i.e., enabling trigger) arduino
       // sync. Otherwise it will produce timeout error of this driver. Therefore
       // give more time for grabbing an image by increasing timeout.
-      timeout_ = 60000;  // 60secs
+      timeout_ = 600000;  // 60secs
       Spinnaker::ImagePtr image_ptr = pCam_->GetNextImage(timeout_);
       //  std::string format(image_ptr->GetPixelFormatName());
       //  std::printf("\033[100m format: %s \n", format.c_str());
+      //image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BayerRG8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
+      
+      
 
       if (image_ptr->IsIncomplete()) {
         throw std::runtime_error(
             "[SpinnakerCamera::grabImage] Image received from camera " +
             std::to_string(serial_) + " is incomplete.");
       } else {
+
+        //Spinnaker::ImagePtr image_ptr = image_ptr_original->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::NO_COLOR_PROCESSING);
+
+
+        std::string imageEncodingROS = sensor_msgs::image_encodings::BGR8;
+        Spinnaker::PixelFormatEnums imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
+        //Spinnaker::ImagePtr image_ptr_filtered;
+
         // Set Image Time Stamp
         image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
         image->header.stamp.nsec = image_ptr->GetTimeStamp();
 
         // Check the bits per pixel.
         size_t bitsPerPixel = image_ptr->GetBitsPerPixel();
+        std::cout << "bpp: " << image_ptr->GetBitsPerPixel() << std::endl;
 
         // --------------------------------------------------
         // Set the image encoding
-        std::string imageEncoding = sensor_msgs::image_encodings::MONO8;
+        std::string imageEncoding;// = sensor_msgs::image_encodings::MONO8;
 
         Spinnaker::GenApi::CEnumerationPtr color_filter_ptr =
             static_cast<Spinnaker::GenApi::CEnumerationPtr>(
@@ -366,6 +378,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
             // 16 Bits per Pixel
             if (color_filter_str.compare(bayer_rg_str) == 0) {
               imageEncoding = sensor_msgs::image_encodings::BAYER_RGGB16;
+              std::cout << "Recognized the 16 bit RG Bayer format" << std::endl;
             } else if (color_filter_str.compare(bayer_gr_str) == 0) {
               imageEncoding = sensor_msgs::image_encodings::BAYER_GRBG16;
             } else if (color_filter_str.compare(bayer_gb_str) == 0) {
@@ -398,11 +411,28 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
           if (bitsPerPixel == 16) {
             imageEncoding = sensor_msgs::image_encodings::MONO16;
           } else if (bitsPerPixel == 24) {
-            imageEncoding = sensor_msgs::image_encodings::BGR8;
+            //imageEncoding = sensor_msgs::image_encodings::RGB8;
+            imageEncodingROS = sensor_msgs::image_encodings::BGR8;
+            imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
+            //image_ptr = image_ptr->Convert(imageEncodingSpinnaker, Spinnaker::NO_COLOR_PROCESSING);
+            //std::cout << "And here!" << std::endl;
           } else {
-            imageEncoding = sensor_msgs::image_encodings::MONO8;
+            imageEncoding = sensor_msgs::image_encodings::BGR8;
+            imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
           }
         }
+
+        imageEncodingROS = sensor_msgs::image_encodings::BGR8;
+        imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
+        image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+        //image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8);
+        Spinnaker::GenApi::CEnumerationPtr format_ptr =
+            static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelFormat"));
+        //std::cout << "I Went actually here! " << format_ptr->ToString() << std::endl;
+        // Temporary hard coding for compatibility checks:
+        
+        // End of temporary hard coding.
+
 
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
@@ -410,7 +440,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
 
         // ROS_INFO_ONCE("\033[93m wxh: (%d, %d), stride: %d \n", width, height,
         // stride);
-        fillImage(*image, imageEncoding, height, width, stride,
+        fillImage(*image, imageEncodingROS, height, width, stride,
                   image_ptr->GetData());
         image->header.frame_id = frame_id;
 

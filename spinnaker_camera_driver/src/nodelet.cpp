@@ -591,7 +591,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                 "Starting a new grab from camera with serial {%d}.",
                 spinnaker_.getSerial());
             spinnaker_.grabImage(&wfov_image->image, frame_id_);
-
+            
             // Set other values
             wfov_image->header.frame_id = frame_id_;
 
