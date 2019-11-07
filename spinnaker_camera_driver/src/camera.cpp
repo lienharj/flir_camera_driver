@@ -207,6 +207,12 @@ void Camera::setImageControlFormats(
   // Apply offset Y
   setProperty(node_map_, "OffsetY", 0);
 
+  // Mirror X
+  setProperty(node_map_, "ReverseX", config.reverse_x);
+  // Mirror Y
+  setProperty(node_map_, "ReverseY", config.reverse_y);
+
+
   // Set Width/Height
   if (config.image_format_roi_width <= 0 ||
       config.image_format_roi_width > width_max_)

@@ -408,7 +408,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         }
 
         // Image Conversion for use with Yolo
-        image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+        image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
 
       //  Spinnaker::GenApi::CEnumerationPtr format_ptr =
       //      static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelFormat"));
