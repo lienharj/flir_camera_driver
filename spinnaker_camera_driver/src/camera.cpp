@@ -227,8 +227,6 @@ void Camera::setImageControlFormats(
   // Set Pixel Format
   setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
 
-  // Set Color Processing 
-  setProperty(node_map_, "ColorProcessingAlgorithm", config.color_processing_algorithm);
 }
 
 void Camera::setGain(const float& gain) {

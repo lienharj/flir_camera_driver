@@ -338,15 +338,14 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
             std::to_string(serial_) + " is incomplete.");
       } else {
 
-        std::string imageEncodingROS = sensor_msgs::image_encodings::BGR8;
-        Spinnaker::PixelFormatEnums imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
-
         // Set Image Time Stamp
         image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
         image->header.stamp.nsec = image_ptr->GetTimeStamp();
 
         // Check the bits per pixel.
         size_t bitsPerPixel = image_ptr->GetBitsPerPixel();
+
+        image_metadata_ = image_ptr->GetChunkData();
 
         // --------------------------------------------------
         // Set the image encoding
@@ -402,19 +401,17 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
           if (bitsPerPixel == 16) {
             imageEncoding = sensor_msgs::image_encodings::MONO16;
           } else if (bitsPerPixel == 24) {
-            imageEncoding = sensor_msgs::image_encodings::RGB8;
-          } else {
             imageEncoding = sensor_msgs::image_encodings::BGR8;
+          } else {
+            imageEncoding = sensor_msgs::image_encodings::MONO8;
           }
         }
 
-        // Temporary hard coding for compatibility checks:
-        imageEncodingROS = sensor_msgs::image_encodings::BGR8;
-        imageEncodingSpinnaker = Spinnaker::PixelFormat_BGR8;
+        // Image Conversion for use with Yolo
         image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
-        Spinnaker::GenApi::CEnumerationPtr format_ptr =
-            static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelFormat"));
-        // End of temporary hard coding.
+
+      //  Spinnaker::GenApi::CEnumerationPtr format_ptr =
+      //      static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelFormat"));
 
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
@@ -422,11 +419,11 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
 
         // ROS_INFO_ONCE("\033[93m wxh: (%d, %d), stride: %d \n", width, height,
         // stride);
-        fillImage(*image, imageEncodingROS, height, width, stride,
+        fillImage(*image, sensor_msgs::image_encodings::BGR8, height, width, stride,
                   image_ptr->GetData());
         image->header.frame_id = frame_id;
 
-        image_metadata_ = image_ptr->GetChunkData();
+        // image_metadata_ = image_ptr->GetChunkData(); MOVED THIS
       }  // end else
     } catch (const Spinnaker::Exception& e) {
       throw std::runtime_error(
