@@ -349,6 +349,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
         boost::bind(&SpinnakerCameraNodelet::connectCb, this);
     img_numbered_pub_ = nh.advertise<image_numbered_msgs::ImageNumbered>(
         "image_numbered", 5, cb3, cb3);
+    second_img_numbered_pub_ = nh.advertise<image_numbered_msgs::ImageNumbered>(
+        "second_image_numbered", 5, cb3, cb3);
 
     // Set up diagnostics
     updater_.setHardwareID("spinnaker_camera " + cinfo_name.str());
@@ -584,60 +586,114 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
           break;
         case STARTED:
           try {
-            wfov_camera_msgs::WFOVImagePtr wfov_image(
-                new wfov_camera_msgs::WFOVImage);
-            // Get the image from the camera library
-            NODELET_DEBUG_ONCE(
-                "Starting a new grab from camera with serial {%d}.",
-                spinnaker_.getSerial());
-            spinnaker_.grabImage(&wfov_image->image, frame_id_, config_);
+              wfov_camera_msgs::WFOVImagePtr wfov_image(
+                  new wfov_camera_msgs::WFOVImage);
+              wfov_camera_msgs::WFOVImagePtr second_wfov_image(
+                  new wfov_camera_msgs::WFOVImage);
+              bool publish_second_image = true;
+
+              // Get the image from the camera library
+              NODELET_DEBUG_ONCE(
+                  "Starting a new grab from camera with serial {%d}.",
+                  spinnaker_.getSerial());
             
-            // Set other values
-            wfov_image->header.frame_id = frame_id_;
+              spinnaker_.grabImage(&wfov_image->image, &second_wfov_image->image, frame_id_, config_);
+              
+              // Set other values
+              wfov_image->header.frame_id = frame_id_;
 
-            wfov_image->gain = gain_;
-            wfov_image->white_balance_blue = wb_blue_;
-            wfov_image->white_balance_red = wb_red_;
+              wfov_image->gain = gain_;
+              wfov_image->white_balance_blue = wb_blue_;
+              wfov_image->white_balance_red = wb_red_;
 
-            // wfov_image->temperature = spinnaker_.getCameraTemperature();
+              // wfov_image->temperature = spinnaker_.getCameraTemperature();
 
-            ros::Time time = ros::Time::now();
-            wfov_image->header.stamp = time;
-            wfov_image->image.header.stamp = time;
+              ros::Time time = ros::Time::now();
+              wfov_image->header.stamp = time;
+              wfov_image->image.header.stamp = time;
 
-            // Set the CameraInfo message
-            ci_.reset(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
-            ci_->header.stamp = wfov_image->image.header.stamp;
-            ci_->header.frame_id = wfov_image->header.frame_id;
-            // The height, width, distortion model, and parameters are all
-            // filled in by camera info manager.
-            ci_->binning_x = binning_x_;
-            ci_->binning_y = binning_y_;
-            ci_->roi.x_offset = roi_x_offset_;
-            ci_->roi.y_offset = roi_y_offset_;
-            ci_->roi.height = roi_height_;
-            ci_->roi.width = roi_width_;
-            ci_->roi.do_rectify = do_rectify_;
+              // Set the CameraInfo message
+              ci_.reset(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
+              ci_->header.stamp = wfov_image->image.header.stamp;
+              ci_->header.frame_id = wfov_image->header.frame_id;
+              // The height, width, distortion model, and parameters are all
+              // filled in by camera info manager.
+              ci_->binning_x = binning_x_;
+              ci_->binning_y = binning_y_;
+              ci_->roi.x_offset = roi_x_offset_;
+              ci_->roi.y_offset = roi_y_offset_;
+              ci_->roi.height = roi_height_;
+              ci_->roi.width = roi_width_;
+              ci_->roi.do_rectify = do_rectify_;
 
-            wfov_image->info = *ci_;
+              wfov_image->info = *ci_;
 
-            // Publish the full message
-            pub_->publish(wfov_image);
+              // Publish the full message
+              pub_->publish(wfov_image);
 
-            // Publish the message using standard image transport
-            if (it_pub_.getNumSubscribers() > 0) {
-              sensor_msgs::ImagePtr image(
-                  new sensor_msgs::Image(wfov_image->image));
-              it_pub_.publish(image, ci_);
-            }
-            if (img_numbered_pub_.getNumSubscribers() > 0) {
-              image_numbered_msgs::ImageNumberedPtr image(
-                  new image_numbered_msgs::ImageNumbered());
-              image->image = wfov_image->image;
-              image->number = spinnaker_.getFrameCounter();
-              // image->image.header.stamp += imu_time_offset_;
-              img_numbered_pub_.publish(image);
-            }
+              // Publish the message using standard image transport
+              if (it_pub_.getNumSubscribers() > 0) {
+                sensor_msgs::ImagePtr image(
+                    new sensor_msgs::Image(wfov_image->image));
+                it_pub_.publish(image, ci_);
+              }
+              if (img_numbered_pub_.getNumSubscribers() > 0) {
+                image_numbered_msgs::ImageNumberedPtr image(
+                    new image_numbered_msgs::ImageNumbered());
+                image->image = wfov_image->image;
+                image->number = spinnaker_.getFrameCounter();
+                // image->image.header.stamp += imu_time_offset_;          
+                img_numbered_pub_.publish(image);
+              }
+              if (publish_second_image) {
+                            // Set other values
+                second_wfov_image->header.frame_id = frame_id_;
+
+                second_wfov_image->gain = gain_;
+                second_wfov_image->white_balance_blue = wb_blue_;
+                second_wfov_image->white_balance_red = wb_red_;
+
+                // second_wfov_image->temperature = spinnaker_.getCameraTemperature();
+
+                ros::Time time = ros::Time::now();
+                second_wfov_image->header.stamp = time;
+                second_wfov_image->image.header.stamp = time;
+
+                // Set the CameraInfo message
+                ci_.reset(new sensor_msgs::CameraInfo(cinfo_->getCameraInfo()));
+                ci_->header.stamp = second_wfov_image->image.header.stamp;
+                ci_->header.frame_id = second_wfov_image->header.frame_id;
+                // The height, width, distortion model, and parameters are all
+                // filled in by camera info manager.
+                ci_->binning_x = binning_x_;
+                ci_->binning_y = binning_y_;
+                ci_->roi.x_offset = roi_x_offset_;
+                ci_->roi.y_offset = roi_y_offset_;
+                ci_->roi.height = roi_height_;
+                ci_->roi.width = roi_width_;
+                ci_->roi.do_rectify = do_rectify_;
+
+                second_wfov_image->info = *ci_;
+
+                // Publish the full message
+                pub_->publish(second_wfov_image);
+
+                // Publish the message using standard image transport
+                if (it_pub_.getNumSubscribers() > 0) {
+                  sensor_msgs::ImagePtr image(
+                      new sensor_msgs::Image(second_wfov_image->image));
+                  it_pub_.publish(image, ci_);
+                }
+                if (img_numbered_pub_.getNumSubscribers() > 0) {
+                  image_numbered_msgs::ImageNumberedPtr image(
+                      new image_numbered_msgs::ImageNumbered());
+                  image->image = second_wfov_image->image;
+                  image->number = spinnaker_.getFrameCounter();
+                  // image->image.header.stamp += imu_time_offset_;          
+                  second_img_numbered_pub_.publish(image);
+                }
+              }
+            
           } catch (CameraTimeoutException& e) {
             NODELET_WARN("%s", e.what());
           }
@@ -694,6 +750,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       it_pub_;                       ///< CameraInfoManager ROS publisher
   ros::Publisher img_numbered_pub_;  ///< Image publisher that also publishes
                                      ///the associated embedded frame number.
+  ros::Publisher second_img_numbered_pub_; // Second published topic in case a two different filtered versions are to be published for calibration result comparison  
+
   std::shared_ptr<
       diagnostic_updater::DiagnosedPublisher<wfov_camera_msgs::WFOVImage> >
       pub_;  ///< Diagnosed

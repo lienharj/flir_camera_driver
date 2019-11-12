@@ -161,7 +161,7 @@ class SpinnakerCamera {
   * in the buffer.
   * \param frame_id The name of the optical frame of the camera.
   */
-  void grabImage(sensor_msgs::Image* image, const std::string& frame_id, const spinnaker_camera_driver::SpinnakerConfig& config);
+  void grabImage(sensor_msgs::Image* image, sensor_msgs::Image* second_image, const std::string& frame_id, const spinnaker_camera_driver::SpinnakerConfig& config);
 
   /*!
   * \brief Will set grabImage timeout for the camera.
