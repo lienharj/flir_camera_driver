@@ -410,9 +410,6 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         // Image Conversion for use with Yolo
         image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
 
-      //  Spinnaker::GenApi::CEnumerationPtr format_ptr =
-      //      static_cast<Spinnaker::GenApi::CEnumerationPtr>(node_map_->GetNode("PixelFormat"));
-
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
         int stride = image_ptr->GetStride();
@@ -423,7 +420,6 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
                   image_ptr->GetData());
         image->header.frame_id = frame_id;
 
-        // image_metadata_ = image_ptr->GetChunkData(); MOVED THIS
       }  // end else
     } catch (const Spinnaker::Exception& e) {
       throw std::runtime_error(
