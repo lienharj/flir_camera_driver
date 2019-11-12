@@ -317,7 +317,7 @@ uint64_t SpinnakerCamera::getFrameCounter(void) {
 }
 
 void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
-                                const std::string& frame_id) {
+                                const std::string& frame_id, const spinnaker_camera_driver::SpinnakerConfig& config) {
   std::lock_guard<std::mutex> scopedLock(mutex_);
 
   // Check if Camera is connected and Running
@@ -408,8 +408,13 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
         }
 
         // Image Conversion for use with Yolo
-        image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
-
+        if (config.color_processing_algorithm == "DEFAULT") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DEFAULT);
+        else if (config.color_processing_algorithm == "HQ_LINEAR") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
+        else if (config.color_processing_algorithm == "DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+        else if (config.color_processing_algorithm == "WEIGHTED_DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
+        else throw std::runtime_error(
+          "[SpinnakerCamera::grabImage] Failed to recognize Color Processing Algorithm, candidates are: DEFAULT, HQ_LINEAR, DIRECTIONAL_FILTER, WEIGHTED_DIRECTIONAL_FILTER");
+        
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
         int stride = image_ptr->GetStride();
