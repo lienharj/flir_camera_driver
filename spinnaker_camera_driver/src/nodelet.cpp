@@ -642,6 +642,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                     new image_numbered_msgs::ImageNumbered());
                 image->image = wfov_image->image;
                 image->number = spinnaker_.getFrameCounter();
+                std::cout << "1st image spinnaker_.getFrameCounter(): " << spinnaker_.getFrameCounter() << std::endl;
                 // image->image.header.stamp += imu_time_offset_;          
                 img_numbered_pub_.publish(image);
               }
@@ -689,6 +690,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                       new image_numbered_msgs::ImageNumbered());
                   image->image = second_wfov_image->image;
                   image->number = spinnaker_.getFrameCounter();
+                  std::cout << "2nd image spinnaker_.getFrameCounter(): " << spinnaker_.getFrameCounter() << std::endl;
                   // image->image.header.stamp += imu_time_offset_;          
                   second_img_numbered_pub_.publish(image);
                 }

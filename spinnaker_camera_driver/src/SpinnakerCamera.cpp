@@ -428,7 +428,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image, sensor_msgs::Image* s
         // HERE publish second image check:
         if (true) {
           Spinnaker::ImagePtr second_image_ptr;
-          second_image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+          second_image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
           fillImage(*second_image, sensor_msgs::image_encodings::BGR8, height, width, stride,
                     second_image_ptr->GetData());
           second_image->header.frame_id = frame_id;
