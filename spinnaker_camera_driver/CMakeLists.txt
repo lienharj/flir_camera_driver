@@ -81,12 +81,16 @@ add_library(Cm3 src/cm3.cpp)
 target_link_libraries(Cm3 Camera ${catkin_LIBRARIES} usb-1.0)
 add_dependencies(Cm3 ${PROJECT_NAME}_gencfg)
 
+add_library(BFly src/bfly.cpp)
+target_link_libraries(BFly Camera ${catkin_LIBRARIES} usb-1.0)
+add_dependencies(BFly ${PROJECT_NAME}_gencfg)
+
 add_library(Diagnostics src/diagnostics.cpp)
 target_link_libraries(Diagnostics Camera SpinnakerCameraLib ${catkin_LIBRARIES} usb-1.0)
 add_dependencies(Diagnostics ${PROJECT_NAME}_gencfg)
 
 add_library(SpinnakerCameraNodelet src/nodelet.cpp)
-target_link_libraries(SpinnakerCameraNodelet Diagnostics SpinnakerCameraLib Camera Cm3 ${catkin_LIBRARIES} usb-1.0)
+target_link_libraries(SpinnakerCameraNodelet Diagnostics SpinnakerCameraLib Camera Cm3 BFly ${catkin_LIBRARIES} usb-1.0)
 
 add_executable(spinnaker_camera_node src/node.cpp)
 target_link_libraries(spinnaker_camera_node SpinnakerCameraLib ${catkin_LIBRARIES} usb-1.0)
@@ -97,6 +101,7 @@ install(TARGETS
   SpinnakerCameraNodelet
   Camera
   Cm3
+  BFly
   Diagnostics
   spinnaker_camera_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
