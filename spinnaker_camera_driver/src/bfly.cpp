@@ -38,9 +38,7 @@ void BFly::setNewConfiguration(const SpinnakerConfig &config,
 
     setFrameRate(static_cast<float>(config.acquisition_frame_rate));
     setProperty(node_map_, "AcquisitionFrameRateEnabled",
-                config.acquisition_frame_rate_enable); // Set enable after
-                                                       // frame rate encase its
-                                                       // false
+                config.acquisition_frame_rate_enable);
 
     // Set Trigger and Strobe Settings
     // NOTE: The trigger must be disabled (i.e. TriggerMode = "Off") in order to
@@ -54,6 +52,7 @@ void BFly::setNewConfiguration(const SpinnakerConfig &config,
     setProperty(node_map_, "LineSelector", config.line_selector);
     setProperty(node_map_, "LineMode", config.line_mode);
     setProperty(node_map_, "LineSource", config.line_source);
+    setProperty(node_map_, "LineInverter", config.line_inverter);
 
     // Set auto exposure
     setProperty(node_map_, "ExposureMode", config.exposure_mode);
@@ -83,10 +82,8 @@ void BFly::setNewConfiguration(const SpinnakerConfig &config,
       setProperty(node_map_, "ExposureTime",
                   static_cast<float>(config.exposure_time));
     } else {
-      setProperty(
-          node_map_, "AutoExposureTimeUpperLimit",
-          static_cast<float>(
-              config.auto_exposure_time_upper_limit)); // Different than BFly S
+      setProperty(node_map_, "AutoExposureTimeUpperLimit",
+                  static_cast<float>(config.auto_exposure_time_upper_limit));
     }
 
     // Set gain
