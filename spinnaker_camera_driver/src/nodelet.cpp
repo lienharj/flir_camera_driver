@@ -303,13 +303,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     spinnaker_.setDesiredCamera((uint32_t)serial);
 
     // Get GigE camera parameters:
-    pnh.param<int>("packet_size", packet_size_, 1400);
+    pnh.param<int>("packet_size", packet_size_, 1500);
     pnh.param<bool>("auto_packet_size", auto_packet_size_, true);
-    pnh.param<int>("packet_delay", packet_delay_, 4000);
+    pnh.param<int>("packet_delay", packet_delay_, 0);
 
-    // TODO(mhosmar):  Set GigE parameters:
-    // spinnaker_.setGigEParameters(auto_packet_size_, packet_size_,
-    // packet_delay_);
+    spinnaker_.setGigEParameters(auto_packet_size_, packet_size_,
+    packet_delay_);
 
     // Get the location of our camera config yaml
     std::string camera_info_url;

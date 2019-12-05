@@ -187,6 +187,18 @@ class SpinnakerCamera {
   */
   void setDesiredCamera(const uint32_t& id);
 
+  /*!
+  * \brief Set parameters relative to GigE cameras.
+  *
+  * \param auto_packet_size Flag stating if packet size should be automatically
+  * determined or not.
+  * \param packet_size The packet size value to use if auto_packet_size is
+  * false.
+  */
+  // TODO(mhosmar): Implement later
+  void setGigEParameters(bool auto_packet_size, unsigned int packet_size,
+    unsigned int packet_delay);
+
   void setGain(const float& gain);
   int getHeightMax();
   int getWidthMax();
@@ -223,11 +235,11 @@ class SpinnakerCamera {
   // For GigE cameras:
   /// If true, GigE packet size is automatically determined, otherwise
   /// packet_size_ is used:
-  bool auto_packet_size_;
+  bool auto_packet_size_ = true;
   /// GigE packet size:
-  unsigned int packet_size_;
+  unsigned int packet_size_ = 1500;
   /// GigE packet delay:
-  unsigned int packet_delay_;
+  unsigned int packet_delay_ = 0;
 
   uint64_t timeout_;
   // This function configures the camera to add chunk data to each image. It

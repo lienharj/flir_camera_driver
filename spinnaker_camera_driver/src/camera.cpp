@@ -231,6 +231,28 @@ void Camera::setGain(const float& gain) {
   setProperty(node_map_, "Gain", static_cast<float>(gain));
 }
 
+void Camera::setupGigEPacketSize(const unsigned int packet_size)
+{
+  try {
+    setProperty(node_map_, "GevSCPSPacketSize", static_cast<int>(packet_size));
+  } catch (const Spinnaker::Exception& e) {
+    throw std::runtime_error(
+        "[Camera::setupGigEPacketSize] Failed to set configuration: " +
+        std::string(e.what()));
+  }
+}
+
+void Camera::setupGigEPacketDelay(const unsigned int packet_delay)
+{
+  try {
+    setProperty(node_map_, "GevSCPD", static_cast<int>(packet_delay));
+  } catch (const Spinnaker::Exception& e) {
+    throw std::runtime_error(
+        "[Camera::setupGigEPacketSize] Failed to set configuration: " +
+        std::string(e.what()));
+  }
+}
+
 /*
 void Camera::setGigEParameters(bool auto_packet_size, unsigned int packet_size,
 unsigned int packet_delay)
@@ -239,11 +261,6 @@ unsigned int packet_delay)
 
 void Camera::setupGigEPacketSize(PGRGuid & guid)
 {
-}
-
-void Camera::setupGigEPacketSize(PGRGuid & guid, unsigned int packet_size)
-{
-
 }
 
 void Camera::setupGigEPacketDelay(PGRGuid & guid, unsigned int packet_delay)
