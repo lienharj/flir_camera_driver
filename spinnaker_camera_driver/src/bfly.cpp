@@ -87,7 +87,6 @@ void BFly::setNewConfiguration(const SpinnakerConfig &config,
     }
 
     // Set gain
-    setProperty(node_map_, "GainSelector", config.gain_selector);
     setProperty(node_map_, "GainAuto", config.auto_gain);
     if (config.auto_gain.compare(std::string("Off")) == 0) {
       setProperty(node_map_, "Gain", static_cast<float>(config.gain));
