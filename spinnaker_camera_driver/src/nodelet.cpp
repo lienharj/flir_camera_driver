@@ -459,8 +459,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   * them.
   */
   void devicePoll() {
-    ROS_INFO_ONCE("devicePoll");
-
     enum State { NONE, ERROR, STOPPED, DISCONNECTED, CONNECTED, STARTED };
 
     State state = DISCONNECTED;
@@ -638,6 +636,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
               img_numbered_pub_.publish(image);
             }
           } catch (CameraTimeoutException& e) {
+            NODELET_WARN("%s", e.what());
+          }
+
+          catch (CameraImageIncompleteException& e) {
             NODELET_WARN("%s", e.what());
           }
 

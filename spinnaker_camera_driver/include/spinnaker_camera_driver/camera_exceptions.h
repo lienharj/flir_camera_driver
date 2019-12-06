@@ -84,4 +84,11 @@ class CameraImageNotReadyException : public std::runtime_error {
       : runtime_error(msg.c_str()) {}
 };
 
+class CameraImageIncompleteException : public std::runtime_error {
+ public:
+  CameraImageIncompleteException() : runtime_error("Image is incomplete.") {}
+  explicit CameraImageIncompleteException(const std::string& msg)
+      : runtime_error(msg.c_str()) {}
+};
+
 #endif  // SPINNAKER_CAMERA_DRIVER_CAMERA_EXCEPTIONS_H

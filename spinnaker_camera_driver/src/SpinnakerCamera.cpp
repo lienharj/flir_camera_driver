@@ -349,10 +349,10 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
       //  std::printf("\033[100m format: %s \n", format.c_str());
 
       if (image_ptr->IsIncomplete()) {
-        throw std::runtime_error(
-            "[SpinnakerCamera::grabImage] Image received from camera " +
-            std::to_string(serial_) + " is incomplete: " +
-            Spinnaker::Image::GetImageStatusDescription(image_ptr->GetImageStatus()));
+        throw CameraImageIncompleteException(
+          "[SpinnakerCamera::grabImage] Image received from camera " +
+          std::to_string(serial_) + " is incomplete: " +
+          Spinnaker::Image::GetImageStatusDescription(image_ptr->GetImageStatus()));
       } else {
         // Set Image Time Stamp
         image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
