@@ -70,8 +70,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "spinnaker_camera_driver/diagnostics.h"
 
 #include <camera_info_manager/camera_info_manager.h>  // ROS library that publishes CameraInfo topics
+#include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>  // ROS library that allows sending compressed images
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <sensor_msgs/CameraInfo.h>  // ROS message header for CameraInfo
+#include <sensor_msgs/image_encodings.h>
 
 #include <image_exposure_msgs/ExposureSequence.h>  // Message type for configuring gain and white balance.
 #include <wfov_camera_msgs/WFOVImage.h>
@@ -408,6 +412,17 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     //   ROS_INFO("imu_time_offset_s is %.4f", imu_time_offset_s);
     //   imu_time_offset_ = ros::Duration(imu_time_offset_s);
     // }
+
+    // Histogram Equalization Options
+    pnh.param<bool>("histogram_equalization_enabled",
+                    histogram_equalization_enabled,
+                    histogram_equalization_enabled);
+    pnh.param<int>("histogram_equalization_clahe_clip_limit",
+                   histogram_equalization_clahe_clip_limit,
+                   histogram_equalization_clahe_clip_limit);
+    pnh.param<int>("histogram_equalization_clahe_grid_size",
+                   histogram_equalization_clahe_grid_size,
+                   histogram_equalization_clahe_grid_size);
   }
 
   /**
@@ -621,6 +636,81 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
             wfov_image->info = *ci_;
 
+
+            #include <cv_bridge/cv_bridge.h>
+
+            #include "spinnaker_camera_driver/SpinnakerCamera.h" // The actual standalone library for the Spinnakers
+            #include "spinnaker_camera_driver/diagnostics.h"
+
+            #include <camera_info_manager/camera_info_manager.h> // ROS library that publishes CameraInfo topics
+            #include <image_transport/image_transport.h> // ROS library that allows sending compressed images
+            #include <opencv2/imgproc/imgproc.hpp>
+            #include <sensor_msgs/CameraInfo.h> // ROS message header for CameraInfo
+            #include <sensor_msgs/image_encodings.h>
+
+            if (histogram_equalization_enabled) {
+              bool success = true;
+
+              cv_bridge::CvImagePtr cv_ptr;
+              try {
+                cv_ptr = cv_bridge::toCvCopy(wfov_image->image,
+                                             wfov_image->image.encoding);
+              } catch (cv_bridge::Exception &e) {
+                ROS_ERROR("cv_bridge exception: %s", e.what());
+                success = false;
+              }
+              if (success) {
+                cv::Mat &image_to_process = cv_ptr->image;
+                if (wfov_image->image.encoding ==
+                    sensor_msgs::image_encodings::RGB8) {
+                  assert(image_to_process.channels() == 3);
+                  cv::Mat ycrcb;
+                  cv::cvtColor(image_to_process, ycrcb, CV_RGB2YCrCb);
+                  std::vector<cv::Mat> channels;
+                  cv::split(ycrcb, channels);
+
+                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
+                      histogram_equalization_clahe_clip_limit,
+                      cv::Size(histogram_equalization_clahe_grid_size,
+                               histogram_equalization_clahe_grid_size));
+                  clahe->apply(channels[0], channels[0]);
+
+                  cv::Mat result;
+                  cv::merge(channels, ycrcb);
+                  cv::cvtColor(ycrcb, image_to_process, CV_YCrCb2RGB);
+                } else if (wfov_image->image.encoding ==
+                           sensor_msgs::image_encodings::BGR8) {
+                  assert(image_to_process.channels() == 3);
+
+                  cv::Mat ycrcb;
+                  cv::cvtColor(image_to_process, ycrcb, CV_BGR2YCrCb);
+                  std::vector<cv::Mat> channels;
+                  cv::split(ycrcb, channels);
+
+                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
+                      histogram_equalization_clahe_clip_limit,
+                      cv::Size(histogram_equalization_clahe_grid_size,
+                               histogram_equalization_clahe_grid_size));
+                  clahe->apply(channels[0], channels[0]);
+
+                  cv::merge(channels, ycrcb);
+                  cv::cvtColor(ycrcb, image_to_process, CV_YCrCb2BGR);
+                } else if (wfov_image->image.encoding ==
+                           sensor_msgs::image_encodings::MONO8) {
+                  assert(image_to_process.channels() == 1);
+
+                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
+                      histogram_equalization_clahe_clip_limit,
+                      cv::Size(histogram_equalization_clahe_grid_size,
+                               histogram_equalization_clahe_grid_size));
+                  clahe->apply(image_to_process, image_to_process);
+                }
+
+                // Convert back.
+                cv_ptr->toImageMsg(wfov_image->image);
+              }
+            }
+
             // Publish the full message
             pub_->publish(wfov_image);
 
@@ -748,6 +838,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   int packet_delay_;
   /// Configuration:
 
+  // Histogram Equalization Options
+  bool histogram_equalization_enabled = false;
+  int histogram_equalization_clahe_clip_limit = 2;
+  int histogram_equalization_clahe_grid_size = 8;
   // ros::Duration imu_time_offset_;
   spinnaker_camera_driver::SpinnakerConfig config_;
 };
