@@ -414,9 +414,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     // }
 
     // Histogram Equalization Options
-    pnh.param<bool>("histogram_equalization_enabled",
-                    histogram_equalization_enabled,
-                    histogram_equalization_enabled);
+    pnh.param<std::string>("histogram_equalization_mode",
+                    histogram_equalization_mode,
+                    histogram_equalization_mode);
     pnh.param<int>("histogram_equalization_clahe_clip_limit",
                    histogram_equalization_clahe_clip_limit,
                    histogram_equalization_clahe_clip_limit);
@@ -636,44 +636,43 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
             wfov_image->info = *ci_;
 
+            const bool histogram_equalization_mode_clahe =
+                histogram_equalization_mode == "clahe";
+            const bool histogram_equalization_mode_normal =
+                histogram_equalization_mode == "standard";
 
-            #include <cv_bridge/cv_bridge.h>
+            const bool histogram_equalization_mode_off =
+                histogram_equalization_mode.empty() ||
+                (!histogram_equalization_mode_normal && !histogram_equalization_mode_clahe);
 
-            #include "spinnaker_camera_driver/SpinnakerCamera.h" // The actual standalone library for the Spinnakers
-            #include "spinnaker_camera_driver/diagnostics.h"
-
-            #include <camera_info_manager/camera_info_manager.h> // ROS library that publishes CameraInfo topics
-            #include <image_transport/image_transport.h> // ROS library that allows sending compressed images
-            #include <opencv2/imgproc/imgproc.hpp>
-            #include <sensor_msgs/CameraInfo.h> // ROS message header for CameraInfo
-            #include <sensor_msgs/image_encodings.h>
-
-            if (histogram_equalization_enabled) {
+            if (!histogram_equalization_mode_off) {
               bool success = true;
 
               cv_bridge::CvImagePtr cv_ptr;
               try {
-                cv_ptr = cv_bridge::toCvCopy(wfov_image->image,
-                                             wfov_image->image.encoding);
+                cv_ptr = cv_bridge::toCvCopy(wfov_image->image, wfov_image->image.encoding);
               } catch (cv_bridge::Exception &e) {
                 ROS_ERROR("cv_bridge exception: %s", e.what());
                 success = false;
               }
               if (success) {
                 cv::Mat &image_to_process = cv_ptr->image;
-                if (wfov_image->image.encoding ==
-                    sensor_msgs::image_encodings::RGB8) {
+                if (wfov_image->image.encoding == sensor_msgs::image_encodings::RGB8) {
                   assert(image_to_process.channels() == 3);
                   cv::Mat ycrcb;
                   cv::cvtColor(image_to_process, ycrcb, CV_RGB2YCrCb);
                   std::vector<cv::Mat> channels;
                   cv::split(ycrcb, channels);
 
-                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
-                      histogram_equalization_clahe_clip_limit,
-                      cv::Size(histogram_equalization_clahe_grid_size,
-                               histogram_equalization_clahe_grid_size));
-                  clahe->apply(channels[0], channels[0]);
+                  if(histogram_equalization_mode_clahe){
+                    static cv::Ptr<cv::CLAHE> clahe =
+                        cv::createCLAHE(histogram_equalization_clahe_clip_limit,
+                                        cv::Size(histogram_equalization_clahe_grid_size,
+                                                 histogram_equalization_clahe_grid_size));
+                    clahe->apply(channels[0], channels[0]);
+                  } else {
+                    cv::equalizeHist(channels[0], channels[0]);
+                  }
 
                   cv::Mat result;
                   cv::merge(channels, ycrcb);
@@ -687,11 +686,15 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                   std::vector<cv::Mat> channels;
                   cv::split(ycrcb, channels);
 
-                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
-                      histogram_equalization_clahe_clip_limit,
-                      cv::Size(histogram_equalization_clahe_grid_size,
-                               histogram_equalization_clahe_grid_size));
-                  clahe->apply(channels[0], channels[0]);
+                  if(histogram_equalization_mode_clahe){
+                    static cv::Ptr<cv::CLAHE> clahe =
+                        cv::createCLAHE(histogram_equalization_clahe_clip_limit,
+                                        cv::Size(histogram_equalization_clahe_grid_size,
+                                                 histogram_equalization_clahe_grid_size));
+                    clahe->apply(channels[0], channels[0]);
+                  } else {
+                    cv::equalizeHist(channels[0], channels[0]);
+                  }
 
                   cv::merge(channels, ycrcb);
                   cv::cvtColor(ycrcb, image_to_process, CV_YCrCb2BGR);
@@ -699,11 +702,15 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                            sensor_msgs::image_encodings::MONO8) {
                   assert(image_to_process.channels() == 1);
 
-                  static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(
-                      histogram_equalization_clahe_clip_limit,
-                      cv::Size(histogram_equalization_clahe_grid_size,
-                               histogram_equalization_clahe_grid_size));
-                  clahe->apply(image_to_process, image_to_process);
+                  if(histogram_equalization_mode_clahe){
+                    static cv::Ptr<cv::CLAHE> clahe =
+                        cv::createCLAHE(histogram_equalization_clahe_clip_limit,
+                                        cv::Size(histogram_equalization_clahe_grid_size,
+                                                 histogram_equalization_clahe_grid_size));
+                    clahe->apply(image_to_process, image_to_process);
+                  } else {
+                    cv::equalizeHist(image_to_process, image_to_process);
+                  }
                 }
 
                 // Convert back.
@@ -839,7 +846,7 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   /// Configuration:
 
   // Histogram Equalization Options
-  bool histogram_equalization_enabled = false;
+  std::string histogram_equalization_mode = "none";
   int histogram_equalization_clahe_clip_limit = 2;
   int histogram_equalization_clahe_grid_size = 8;
   // ros::Duration imu_time_offset_;
