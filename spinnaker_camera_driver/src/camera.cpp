@@ -108,6 +108,8 @@ void Camera::setNewConfiguration(const SpinnakerConfig& config,
     setProperty(node_map_, "ExposureMode", config.exposure_mode);
     setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
+    setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+
     // Set sharpness
     if (IsAvailable(node_map_->GetNode("SharpeningEnable"))) {
       setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
@@ -204,6 +206,11 @@ void Camera::setImageControlFormats(
   setProperty(node_map_, "OffsetX", 0);
   // Apply offset Y
   setProperty(node_map_, "OffsetY", 0);
+
+  // Mirror X
+  setProperty(node_map_, "ReverseX", config.reverse_x);
+  // Mirror Y
+  setProperty(node_map_, "ReverseY", config.reverse_y);
 
   // Set Width/Height
   if (config.image_format_roi_width <= 0 ||
