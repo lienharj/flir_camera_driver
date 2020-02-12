@@ -317,7 +317,7 @@ uint64_t SpinnakerCamera::getFrameCounter(void) {
 }
 
 void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
-                                const std::string& frame_id) {
+                                const std::string& frame_id, const spinnaker_camera_driver::SpinnakerConfig& config) {
   std::lock_guard<std::mutex> scopedLock(mutex_);
 
   // Check if Camera is connected and Running
@@ -337,12 +337,15 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
             "[SpinnakerCamera::grabImage] Image received from camera " +
             std::to_string(serial_) + " is incomplete.");
       } else {
+
         // Set Image Time Stamp
         image->header.stamp.sec = image_ptr->GetTimeStamp() * 1e-9;
         image->header.stamp.nsec = image_ptr->GetTimeStamp();
 
         // Check the bits per pixel.
         size_t bitsPerPixel = image_ptr->GetBitsPerPixel();
+
+        image_metadata_ = image_ptr->GetChunkData();
 
         // --------------------------------------------------
         // Set the image encoding
@@ -404,17 +407,24 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
           }
         }
 
+        // Image Conversion for use with Yolo
+        if (config.color_processing_algorithm == "DEFAULT") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DEFAULT);
+        else if (config.color_processing_algorithm == "HQ_LINEAR") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::HQ_LINEAR);
+        else if (config.color_processing_algorithm == "DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+        else if (config.color_processing_algorithm == "WEIGHTED_DIRECTIONAL_FILTER") image_ptr = image_ptr->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::WEIGHTED_DIRECTIONAL_FILTER);
+        else throw std::runtime_error(
+          "[SpinnakerCamera::grabImage] Failed to recognize Color Processing Algorithm, candidates are: DEFAULT, HQ_LINEAR, DIRECTIONAL_FILTER, WEIGHTED_DIRECTIONAL_FILTER");
+        
         int width = image_ptr->GetWidth();
         int height = image_ptr->GetHeight();
         int stride = image_ptr->GetStride();
 
         // ROS_INFO_ONCE("\033[93m wxh: (%d, %d), stride: %d \n", width, height,
         // stride);
-        fillImage(*image, imageEncoding, height, width, stride,
+        fillImage(*image, sensor_msgs::image_encodings::BGR8, height, width, stride,
                   image_ptr->GetData());
         image->header.frame_id = frame_id;
 
-        image_metadata_ = image_ptr->GetChunkData();
       }  // end else
     } catch (const Spinnaker::Exception& e) {
       throw std::runtime_error(
