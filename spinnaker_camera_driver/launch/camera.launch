@@ -63,7 +63,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 
       <!-- Options are: clahe, standard or none -->
-      <param name="histogram_equalization_enabled" value="none" />
+      <param name="histogram_equalization_mode" value="none" />
       <param name="histogram_equalization_clahe_clip_limit" value="2" />
       <param name="histogram_equalization_clahe_grid_size" value="8" />
     </node>
