@@ -14,6 +14,27 @@ Due to differences in parameter naming the configuration is separated from the m
 
 When contributing make sure the travis job suceeds and please use [roscpp_code_format](https://github.com/davetcoleman/roscpp_code_format) to format your code.
 
+## Increasing USB memory buffer
+From [Pointgrey](https://www.ptgrey.com/tan/10685#ConfiguringUSBFS)
+
+By default, Linux limits image capture to 2 MB. To capture images over 2 MB, extend the USBFS limit on how many buffers can be locked into the driver.
+
+You can check your current buffer limit with
+```
+cat /sys/module/usbcore/parameters/usbfs_memory_mb
+```
+
+For capturing larger images, a buffer of ~1000 MB is recommended. Set it permanently by replacing the corresponding line in `/etc/default/grub` with the following:
+```
+GRUB_CMDLINE_LINUX_DEFAULT="nomodeset quiet splash usbcore.usbfs_memory_mb=1000"
+
+```
+followed by
+```
+sudo update-grub
+```
+and reboot.
+
 ## Licence
 ROS-compatible Camera drivers originally provided by NREC, part of Carnegie Mellon University's robotics institute.
 These drives are included along with modifications of the standard ros image messages that enable HDR and physics based vision.
