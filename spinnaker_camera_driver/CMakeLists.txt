@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 generate_dynamic_reconfigure_options(
-  cfg/Spinnaker.cfg
+  cfg/SpinnakerBFS.cfg
 )
 
 catkin_package(CATKIN_DEPENDS
