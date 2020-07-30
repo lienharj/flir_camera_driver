@@ -126,6 +126,8 @@ void DiagnosticsManager::processDiagnostics(SpinnakerCamera* spinnaker) {
       diag_manufacture_info.values.push_back(kv);
     } catch (GetParameterException &e) {
       manufacturer_params_.erase(param);
+      throw GetParameterException("Unable to get parameter " +
+                                  std::string(param->c_str()));
     }
   }
 
@@ -145,6 +147,8 @@ void DiagnosticsManager::processDiagnostics(SpinnakerCamera* spinnaker) {
       diag_array.status.push_back(diag_status);
     } catch (GetParameterException &e) {
       float_params_.erase(param);
+      throw GetParameterException("Unable to get parameter " +
+                                  std::string(param->parameter_name.c_str()));
     }
   }
 
@@ -161,6 +165,8 @@ void DiagnosticsManager::processDiagnostics(SpinnakerCamera* spinnaker) {
       diag_array.status.push_back(diag_status);
     } catch (GetParameterException &e) {
       integer_params_.erase(param);
+      throw GetParameterException("Unable to get parameter " +
+                                  std::string(param->parameter_name.c_str()));
     }
   }
 
