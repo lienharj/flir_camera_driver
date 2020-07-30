@@ -447,7 +447,11 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                                                         // to stop this
                                                         // thread.
     {
-      diag_man->processDiagnostics(&spinnaker_);
+      try {
+        diag_man->processDiagnostics(&spinnaker_);
+      } catch (GetParameterException& e) {
+        NODELET_WARN("%s", e.what());
+      }
     }
   }
 
@@ -640,10 +644,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
           }
 
           catch (CameraImageIncompleteException& e) {
-            NODELET_WARN("%s", e.what());
-          }
-
-          catch (GetParameterException& e) {
             NODELET_WARN("%s", e.what());
           }
 
