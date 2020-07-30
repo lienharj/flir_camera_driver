@@ -115,14 +115,20 @@ void DiagnosticsManager::processDiagnostics(SpinnakerCamera* spinnaker) {
   diag_manufacture_info.hardware_id = serial_number_;
 
   for (const std::string param : manufacturer_params_) {
-    Spinnaker::GenApi::CStringPtr string_ptr =
-        static_cast<Spinnaker::GenApi::CStringPtr>(spinnaker->readProperty(
-            Spinnaker::GenICam::gcstring(param.c_str())));
+    try {
+      Spinnaker::GenApi::CStringPtr string_ptr =
+          static_cast<Spinnaker::GenApi::CStringPtr>(spinnaker->readProperty(
+              Spinnaker::GenICam::gcstring(param.c_str())));
 
-    diagnostic_msgs::KeyValue kv;
-    kv.key = param;
-    kv.value = string_ptr->GetValue(true);
-    diag_manufacture_info.values.push_back(kv);
+      diagnostic_msgs::KeyValue kv;
+      kv.key = param;
+      kv.value = string_ptr->GetValue(true);
+      diag_manufacture_info.values.push_back(kv);
+    } catch (GetParameterException &e) {
+      manufacturer_params_.erase(std::remove(manufacturer_params_.begin(),
+                                            manufacturer_params_.end(), param),
+                                manufacturer_params_.end());
+    }
   }
 
   diag_array.status.push_back(diag_manufacture_info);
