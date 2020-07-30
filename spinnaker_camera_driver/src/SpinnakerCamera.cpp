@@ -55,6 +55,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "spinnaker_camera_driver/SpinnakerCamera.h"
+#include "spinnaker_camera_driver/camera_exceptions.h"
 
 #include <iostream>
 #include <sstream>

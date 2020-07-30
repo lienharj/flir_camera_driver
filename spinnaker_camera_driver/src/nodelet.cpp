@@ -643,6 +643,10 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             NODELET_WARN("%s", e.what());
           }
 
+          catch (GetParameterException& e) {
+            NODELET_WARN("%s", e.what());
+          }
+
           catch (std::runtime_error& e) {
             NODELET_ERROR("%s", e.what());
             state = ERROR;

@@ -36,6 +36,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 #include "spinnaker_camera_driver/camera.h"
+#include "spinnaker_camera_driver/camera_exceptions.h"
 
 #include <string>
 
@@ -315,7 +316,8 @@ Spinnaker::GenApi::CNodePtr Camera::readProperty(
   Spinnaker::GenApi::CNodePtr ptr = node_map_->GetNode(property_name);
   if (!Spinnaker::GenApi::IsAvailable(ptr) ||
       !Spinnaker::GenApi::IsReadable(ptr)) {
-    throw std::runtime_error("Unable to get parmeter " + property_name);
+    throw GetParameterException("Unable to get parameter " +
+                                std::string(property_name.c_str()));
   }
   return ptr;
 }

@@ -91,4 +91,11 @@ class CameraImageIncompleteException : public std::runtime_error {
       : runtime_error(msg.c_str()) {}
 };
 
+class GetParameterException : public std::runtime_error {
+ public:
+  GetParameterException() : runtime_error("Unable to get parameter.") {}
+  explicit GetParameterException(const std::string& msg)
+      : runtime_error(msg.c_str()) {}
+};
+
 #endif  // SPINNAKER_CAMERA_DRIVER_CAMERA_EXCEPTIONS_H
