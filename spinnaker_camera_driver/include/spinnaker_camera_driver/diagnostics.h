@@ -140,7 +140,7 @@ class DiagnosticsManager {
   // clang-format off
   const std::vector<std::string> manufacturer_params_
   {
-    "DeviceVendorName", "DeviceModelName", "SensorDescription", "DeviceFirmwareVersion"
+    "DeviceVendorName", "DeviceModelName", "DeviceFirmwareVersion"
   };
   // clang-format on
 };
