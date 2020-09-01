@@ -216,9 +216,9 @@ void SpinnakerCamera::connect() {
 
     try {
 
-      pCam_->TLStream.StreamDefaultBufferCountMode.SetValue(Spinnaker::StreamDefaultBufferCountMode_Manual);
-      pCam_->TLStream.StreamBufferHandlingMode.SetValue(Spinnaker::StreamBufferHandlingMode_NewestFirstOverwrite);
-      pCam_->TLStream.StreamDefaultBufferCount.SetValue(1);
+      pCam_->TLStream.StreamBufferCountMode.SetValue(Spinnaker::StreamBufferCountMode_Manual);
+      pCam_->TLStream.StreamBufferHandlingMode.SetValue(Spinnaker::StreamBufferHandlingMode_NewestOnly);
+      pCam_->TLStream.StreamBufferCountManual.SetValue(1);
 
       // Initialize Camera
       pCam_->Init();
