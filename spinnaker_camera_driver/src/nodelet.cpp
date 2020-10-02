@@ -88,8 +88,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <opencv2/imgproc/imgproc.hpp>
 
 // For triggering from mavros
-#include <mavros_msgs/CamIMUStamp.h>
-#include <mavros_msgs/CommandTriggerControl.h>
 
 namespace spinnaker_camera_driver {
 class SpinnakerCameraNodelet : public nodelet::Nodelet {
@@ -391,67 +389,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                               std::make_pair(0.4f, 0.6f), 0.3f, 1.0f);
       diag_man->addDiagnostic<int>("DeviceUptime");
       diag_man->addDiagnostic<int>("U3VMessageChannelID");
-
-      // Here are the triggering settings.
-      pnh.param("force_mavros_triggering", force_mavros_triggering_, false);
-      ROS_INFO("Force mavros triggering: %d", force_mavros_triggering_);
-      double imu_time_offset_s;
-      pnh.param("imu_time_offset_s", imu_time_offset_s, 0.0);
-      imu_time_offset_ = ros::Duration(imu_time_offset_s);
-
-      // prevents it trying to sync up the timestamp count
-      pnh.param("multi_camera_mode", multi_camera_mode_, false);
-
-      // Set up all the stuff for mavros triggering.
-      if (force_mavros_triggering_) {
-        setupMavrosTriggering();
-      }
     }
     connectCb();
-  }
-
-  void setupMavrosTriggering() {
-    // Set up the camera to listen to triggers.
-    config_.enable_trigger = "On";
-    config_.trigger_activation_mode = "RisingEdge";
-    config_.trigger_source = "Line2";
-    paramCallback(config_, 0);
-    srv_->updateConfig(config_);
-    // Set these for now...
-    first_image_ = false;
-    trigger_sequence_offset_ = 0;
-    triggering_started_ = false;
-
-    ros::NodeHandle& nh = getMTNodeHandle();
-    cam_imu_sub_ =
-        nh.subscribe("mavros/cam_imu_sync/cam_imu_stamp", 100,
-                     &SpinnakerCameraNodelet::camImuStampCallback, this);
-  }
-
-  void startMavrosTriggering() {
-    // First subscribe to the messages so we don't miss any.'
-    sequence_time_map_.clear();
-    trigger_sequence_offset_ = 0;
-
-    if (!multi_camera_mode_) {
-      const std::string mavros_trigger_service = "mavros/cmd/trigger_control";
-      if (ros::service::exists(mavros_trigger_service, false)) {
-        mavros_msgs::CommandTriggerControl req;
-        req.request.trigger_enable = true;
-        // This is NOT integration time, this is actually the sequence reset.
-        req.request.cycle_time = 1.0;
-
-        ros::service::call(mavros_trigger_service, req);
-
-        ROS_INFO("Called mavros trigger service! Success? %d Result? %d",
-                 req.response.success, req.response.result);
-      } else {
-        ROS_WARN("Mavros service not available!");
-      }
-    }
-
-    first_image_ = true;
-    triggering_started_ = true;
   }
 
   /**
@@ -618,18 +557,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
 
           break;
         case STARTED:
-          if (force_mavros_triggering_ && !triggering_started_) {
-            startMavrosTriggering();
-          } else if (force_mavros_triggering_ && triggering_started_ &&
-              !multi_camera_mode_ && trigger_sequence_offset_ > 20) {
-            ROS_ERROR(
-                "[Mavros Triggering] Trigger sequence offset is too high at "
-                "%d, "
-                "re-starting triggering.",
-                trigger_sequence_offset_);
-            startMavrosTriggering();
-          }
-
           try {
             sensor_msgs::Image::Ptr image(new sensor_msgs::Image);
             // Get the image from the camera library
@@ -638,33 +565,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
                 spinnaker_.getSerial());
 
             spinnaker_.grabImage(image.get(), frame_id_);
-            double exposure_us = spinnaker_.getLastExposure();
-
-            ROS_DEBUG(
-                "[Mavros Triggering] Got an image at sequence %lu and "
-                "timestamp %f, exposure_us: %f",
-                image->header.seq, image->header.stamp.toSec(), exposure_us);
-
-            bool should_publish = true;
-            if (force_mavros_triggering_) {
-              ros::Time new_stamp;
-              if (!lookupSequenceStamp(image->header, &new_stamp)) {
-                if (image_queue_) {
-                  ROS_WARN_THROTTLE(
-                      5,
-                      "Overwriting image queue! Make sure you're getting "
-                      "timestamps from mavros. This message will only print "
-                      "once every 5 seconds.");
-                }
-                image_queue_ = image;
-                image_queue_exposure_us_ = exposure_us;
-                should_publish = false;
-              } else {
-                image->header.stamp =
-                    shiftTimestampToMidExposure(new_stamp, exposure_us);
-                image->header.stamp += imu_time_offset_;
-              }
-            }
 
             // Set other values
             image->header.frame_id = frame_id_;
@@ -684,11 +584,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             ci_->roi.do_rectify = do_rectify_;
 
             // Publish the message using standard image transport
-            if (should_publish) {
-              it_pub_.publish(image, ci_);
-              if(publish_mono_) {
-                publishMonoImage(image, ci_);
-              }
+            it_pub_.publish(image, ci_);
+            if(publish_mono_) {
+              publishMonoImage(image, ci_);
             }
           } catch (CameraTimeoutException& e) {
             NODELET_WARN("%s", e.what());
@@ -707,80 +605,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       updater_.update();
     }
     NODELET_DEBUG_ONCE("Leaving thread.");
-  }
-
-  void camImuStampCallback(const mavros_msgs::CamIMUStamp& cam_imu_stamp) {
-    if (!triggering_started_) {
-      // Ignore stuff from before we *officially* start the triggering.
-      // The triggering is techncially always running but...
-      return;
-    }
-    sequence_time_map_[cam_imu_stamp.frame_seq_id] = cam_imu_stamp.frame_stamp;
-    ROS_DEBUG(
-        "[Cam Imu Sync] Received a new stamp for sequence number: %ld with "
-        "stamp: %f",
-        cam_imu_stamp.frame_seq_id, cam_imu_stamp.frame_stamp.toSec());
-    constexpr bool kFromImageQueue = true;
-    ros::Time new_stamp;
-    if (image_queue_ && lookupSequenceStamp(image_queue_->header, &new_stamp,
-                                            kFromImageQueue)) {
-      image_queue_->header.stamp =
-          shiftTimestampToMidExposure(new_stamp, image_queue_exposure_us_);
-      image_queue_->header.stamp += imu_time_offset_;
-      it_pub_.publish(image_queue_, ci_);
-      if(publish_mono_) {
-        publishMonoImage(image_queue_, ci_);
-      }
-      image_queue_.reset();
-      ROS_WARN_THROTTLE(60, "Publishing delayed image.");
-    }
-  }
-
-  bool lookupSequenceStamp(const std_msgs::Header& header, ros::Time* timestamp,
-                           bool from_image_queue = false) {
-    if (sequence_time_map_.empty()) {
-      return false;
-    }
-    if (first_image_ && !from_image_queue) {
-      // Get the first from the sequence time map.
-      auto it = sequence_time_map_.begin();
-      int32_t mavros_sequence = it->first;
-      trigger_sequence_offset_ =
-          mavros_sequence - static_cast<int32_t>(header.seq);
-      ROS_INFO(
-          "[Mavros Triggering] New header offset: %d, from %d to %d, timestamp "
-          "correction: %f seconds.",
-          trigger_sequence_offset_, it->first, header.seq,
-          it->second.toSec() - header.stamp.toSec());
-      *timestamp = it->second;
-      first_image_ = false;
-      sequence_time_map_.erase(it);
-      return true;
-    }
-    auto it = sequence_time_map_.find(header.seq + trigger_sequence_offset_);
-    if (it == sequence_time_map_.end()) {
-      return false;
-    }
-
-    ROS_DEBUG("[Mavros Triggering] Remapped seq %d to %d, %f to %f", header.seq,
-              header.seq + trigger_sequence_offset_, header.stamp.toSec(),
-              it->second.toSec());
-
-    const double kMinExpectedDelay = 0.0;
-    const double kMaxExpectedDelay = 40.0 * 1e-3;
-    double delay = header.stamp.toSec() - it->second.toSec();
-    if (delay < kMinExpectedDelay || delay > kMaxExpectedDelay) {
-      ROS_ERROR(
-          "[Mavros Triggering] Delay out of bounds! Actual delay: %f s, min: "
-          "%f s max: %f s. Resetting triggering on next image.",
-          delay, kMinExpectedDelay, kMaxExpectedDelay);
-      triggering_started_ = false;
-    }
-
-    *timestamp = it->second;
-    sequence_time_map_.erase(it);
-
-    return true;
   }
 
   void publishMonoImage(const sensor_msgs::ImagePtr& image,
@@ -805,12 +629,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
     cvimg->image = img_conv;
 
     it_mono_pub_.publish(cvimg->toImageMsg(), ci);
-  }
-
-  ros::Time shiftTimestampToMidExposure(const ros::Time& stamp,
-                                        double exposure_us) {
-    ros::Time new_stamp = stamp + ros::Duration(exposure_us * 1e-6 / 2.0);
-    return new_stamp;
   }
 
   /* Class Fields */
@@ -879,23 +697,8 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   /// GigE packet delay:
   int packet_delay_;
 
-  // Triggering options.
-  bool force_mavros_triggering_;
-  bool multi_camera_mode_;
-
   // Mono options
   bool publish_mono_;
-  // Offset between sequence numbers from the camera and from mavros.
-  int32_t trigger_sequence_offset_;
-  std::map<uint32_t, ros::Time> sequence_time_map_;
-  ros::Subscriber cam_imu_sub_;
-  // We assume this can NEVER be more than 1.
-  sensor_msgs::ImagePtr image_queue_;
-
-  double image_queue_exposure_us_;
-  bool first_image_;
-  bool triggering_started_;
-  ros::Duration imu_time_offset_;
 
   /// Configuration:
   spinnaker_camera_driver::SpinnakerConfig config_;
