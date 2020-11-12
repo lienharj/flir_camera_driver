@@ -52,7 +52,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
       <!--param name="acquisition_frame_rate"          value="$(arg frame_rate)" /-->
 
       <!-- Color Format related config -->
-      <param name="image_format_color_coding" value="Mono8" />
+      <!--param name="image_format_color_coding" value="Mono8" /-->
+      <param name="image_format_color_coding" value="BayerGB8" />
 
       <!-- Exposure related config -->
       <param name="exposure_mode" value="Timed" />
@@ -65,7 +66,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
       <param name="acquisition_mode" value="Continuous" />
       <param name="trigger_source" value="Line0" /> <!-- Pin 2 -->
       <param name="trigger_activation_mode" value="RisingEdge" />
-      <param name="trigger_overlap_mode" value="ReadOut" />
+      <!--param name="trigger_overlap_mode" value="ReadOut" /-->
+      <param name="trigger_overlap_mode" value="Off" />
 
       <!-- Gain related config -->
       <param name="auto_gain" value="Off" />
@@ -92,8 +94,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     </node>
 
     <!-- Debayering nodelet -->
-    <!--node pkg="nodelet" type="nodelet" name="image_proc_debayer"
+    <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
           args="load image_proc/debayer camera_nodelet_manager">
-    </node-->
+    </node>
   </group>
 </launch>

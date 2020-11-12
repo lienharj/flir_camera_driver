@@ -59,110 +59,116 @@ void Gh3::setFrameRate(const float frame_rate)
 void Gh3::setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level)
 {
   try
-  {
-    if (level >= LEVEL_RECONFIGURE_STOP)
-    {
-      // Original code
-      // setImageControlFormats(config);
+  { /**
+     if (level >= LEVEL_RECONFIGURE_STOP)
+     {
+       // Original code
+       // setImageControlFormats(config);
 
-      // Custom SLStudio configuration for Grasshopper3
+       // Custom SLStudio configuration for Grasshopper3
 
-      // We set image format to be Mode 2
-      setProperty(node_map_, "VideoMode", std::string("Mode2"));
-      setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+       // We set image format to be Mode 2 (Decimation)
+       // setProperty(node_map_, "VideoMode", std::string("Mode2"));
 
-      // We set buffer to only send newest image
-      setProperty(node_map_, "StreamBufferCountMode", std::string("Manual"));
-      setProperty(node_map_, "StreamBufferHandlingMode", std::string("NewestOnly"));
-    }
+       // We set image format to be Mode 1 (Average Binning)
+       setProperty(node_map_, "VideoMode", std::string("Mode1"));
+       setProperty(node_map_, "BinningControl", std::string("Average"));
 
-    setFrameRate(static_cast<float>(config.acquisition_frame_rate));
-    setProperty(node_map_, "AcquisitionFrameRateEnabled",
-                config.acquisition_frame_rate_enable);  // Set enable after frame rate encase its false
+       // Set to Desired Pixel Format
+       setProperty(node_map_, "PixelFormat", config.image_format_color_coding);
+     }
+
+     setFrameRate(static_cast<float>(config.acquisition_frame_rate));
+     setProperty(node_map_, "AcquisitionFrameRateEnabled",
+                 config.acquisition_frame_rate_enable);  // Set enable after frame rate encase its false
 
     // Set Trigger and Strobe Settings
     // NOTE: The trigger must be disabled (i.e. TriggerMode = "Off") in order to configure whether the source is
     // software or hardware.
+
     ROS_INFO("[gh3.cpp:setNewConfiguration] Temporarily turning off trigger mode so as to configure trigger options");
     setProperty(node_map_, "TriggerMode", std::string("Off"));
     setProperty(node_map_, "TriggerSource", config.trigger_source);
     setProperty(node_map_, "TriggerSelector", config.trigger_selector);
     setProperty(node_map_, "TriggerActivation", config.trigger_activation_mode);
-    setProperty(node_map_, "TriggerOverlap", config.trigger_overlap_mode);
     ROS_INFO("[gh3.cpp:setNewConfiguration] Now turning trigger mode back on if configured to be so");
     setProperty(node_map_, "TriggerMode", config.enable_trigger);
+    // Only after trigger mode has been turned on then we can set trigger overlap option
+    setProperty(node_map_, "TriggerOverlap", config.trigger_overlap_mode);
 
-    setProperty(node_map_, "LineSelector", config.line_selector);
-    setProperty(node_map_, "LineMode", config.line_mode);
-    // setProperty(node_map_, "LineSource", config.line_source); // Not available in GH3
 
-    // Set auto exposure
-    setProperty(node_map_, "ExposureMode", config.exposure_mode);
-    setProperty(node_map_, "ExposureAuto", config.exposure_auto);
+         //setProperty(node_map_, "LineSelector", config.line_selector);
+         //setProperty(node_map_, "LineMode", config.line_mode);
+         // setProperty(node_map_, "LineSource", config.line_source); // Not available in GH3
 
-    // Set sharpness
-    if (IsAvailable(node_map_->GetNode("SharpeningEnable")))
-    {
-      setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
-      if (config.sharpening_enable)
-      {
-        setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
-        setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
-        setProperty(node_map_, "SharpeningThreshold", static_cast<float>(config.sharpening_threshold));
-      }
-    }
+         // Set auto exposure
+         setProperty(node_map_, "ExposureMode", config.exposure_mode);
+         setProperty(node_map_, "ExposureAuto", config.exposure_auto);
 
-    // Set saturation
-    if (IsAvailable(node_map_->GetNode("SaturationEnable")))
-    {
-      setProperty(node_map_, "SaturationEnable", config.saturation_enable);
-      if (config.saturation_enable)
-      {
-        setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
-      }
-    }
+         // Set sharpness
+         if (IsAvailable(node_map_->GetNode("SharpeningEnable")))
+         {
+           setProperty(node_map_, "SharpeningEnable", config.sharpening_enable);
+           if (config.sharpening_enable)
+           {
+             setProperty(node_map_, "SharpeningAuto", config.auto_sharpness);
+             setProperty(node_map_, "Sharpening", static_cast<float>(config.sharpness));
+             setProperty(node_map_, "SharpeningThreshold", static_cast<float>(config.sharpening_threshold));
+           }
+         }
 
-    // Set shutter time/speed
-    if (config.exposure_auto.compare(std::string("Off")) == 0)
-    {
-      setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
-    }
-    else
-    {
-      setProperty(node_map_, "AutoExposureTimeUpperLimit",
-                  static_cast<float>(config.auto_exposure_time_upper_limit));  // Different than BFly S
-    }
+         // Set saturation
+         if (IsAvailable(node_map_->GetNode("SaturationEnable")))
+         {
+           setProperty(node_map_, "SaturationEnable", config.saturation_enable);
+           if (config.saturation_enable)
+           {
+             setProperty(node_map_, "Saturation", static_cast<float>(config.saturation));
+           }
+         }
 
-    // Set gain
-    // setProperty(node_map_, "GainSelector", config.gain_selector); //Not Writeable for GH3
-    setProperty(node_map_, "GainAuto", config.auto_gain);
-    if (config.auto_gain.compare(std::string("Off")) == 0)
-    {
-      setProperty(node_map_, "Gain", static_cast<float>(config.gain));
-    }
+         // Set shutter time/speed
+         if (config.exposure_auto.compare(std::string("Off")) == 0)
+         {
+           setProperty(node_map_, "ExposureTime", static_cast<float>(config.exposure_time));
+         }
+         else
+         {
+           setProperty(node_map_, "AutoExposureTimeUpperLimit",
+                       static_cast<float>(config.auto_exposure_time_upper_limit));  // Different than BFly S
+         }
 
-    // Set brightness
-    setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
+         // Set gain
+         // setProperty(node_map_, "GainSelector", config.gain_selector); //Not Writeable for GH3
+         setProperty(node_map_, "GainAuto", config.auto_gain);
+         if (config.auto_gain.compare(std::string("Off")) == 0)
+         {
+           setProperty(node_map_, "Gain", static_cast<float>(config.gain));
+         }
 
-    // Set gamma
-    if (config.gamma_enable)
-    {
-      setProperty(node_map_, "GammaEnabled", config.gamma_enable);  // GH3 includes -ed
-      setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
-    }
+         // Set brightness
+         setProperty(node_map_, "BlackLevel", static_cast<float>(config.brightness));
 
-    // Set white balance
-    if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto")))
-    {
-      setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
-      if (config.auto_white_balance.compare(std::string("Off")) == 0)
-      {
-        setProperty(node_map_, "BalanceRatioSelector", "Blue");
-        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_blue_ratio));
-        setProperty(node_map_, "BalanceRatioSelector", "Red");
-        setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_red_ratio));
-      }
-    }
+         // Set gamma
+         if (config.gamma_enable)
+         {
+           setProperty(node_map_, "GammaEnabled", config.gamma_enable);  // GH3 includes -ed
+           setProperty(node_map_, "Gamma", static_cast<float>(config.gamma));
+         }
+
+         // Set white balance
+         if (IsAvailable(node_map_->GetNode("BalanceWhiteAuto")))
+         {
+           setProperty(node_map_, "BalanceWhiteAuto", config.auto_white_balance);
+           if (config.auto_white_balance.compare(std::string("Off")) == 0)
+           {
+             setProperty(node_map_, "BalanceRatioSelector", "Blue");
+             setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_blue_ratio));
+             setProperty(node_map_, "BalanceRatioSelector", "Red");
+             setProperty(node_map_, "BalanceRatio", static_cast<float>(config.white_balance_red_ratio));
+           }
+         }
+         **/
   }
   catch (const Spinnaker::Exception& e)
   {
