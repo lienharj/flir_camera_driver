@@ -188,10 +188,3 @@ if not os.path.exists(os.path.join(os.getcwd(), "opt/spinnaker/lib/")):
     for deb in debs:
         logging.info('Extracting {0}'.format(deb))
         subprocess.call(['dpkg', '--extract', deb, unpack_dir])
-
-    # finally, copy the shared libraries into the output folder
-    src_file = os.path.join(unpack_dir, ARCHS[arch]['shared_library'])
-    logging.info('Copying shared library to {0}'.format(destination_folder))
-    if not os.path.exists(destination_folder):
-        os.makedirs(destination_folder)
-    shutil.copyfile(src_file, os.path.join(destination_folder, 'libSpinnaker.so'))
