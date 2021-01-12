@@ -17,5 +17,5 @@ function(download_spinnaker FLIR_LIB_VAR FLIR_INCLUDE_DIR_VAR)
   execute_process(
     COMMAND ${DOWNLOAD_SCRIPT} ${FLIR_ARCH} "${FLIR_DIR}" ${OS_CODE_NAME})
   set(${FLIR_LIB_VAR} "${FLIR_DIR}/libSpinnaker.so" PARENT_SCOPE)
-  set(${FLIR_INCLUDE_DIR_VAR} "${CMAKE_CURRENT_BINARY_DIR}/usr/include/spinnaker" PARENT_SCOPE)
+  set(${FLIR_INCLUDE_DIR_VAR} "${CMAKE_CURRENT_BINARY_DIR}/opt/spinnaker/include" PARENT_SCOPE)
 endfunction()
