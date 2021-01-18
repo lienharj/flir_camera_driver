@@ -533,16 +533,6 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             spinnaker_.setNewConfiguration(
                 config_, SpinnakerCamera::LEVEL_RECONFIGURE_STOP);
 
-            // Set the timeout for grabbing images.
-            try {
-              double timeout;
-              getMTPrivateNodeHandle().param("timeout", timeout, 1.0);
-              NODELET_DEBUG_ONCE("Setting timeout to: %f.", timeout);
-              spinnaker_.setTimeout(timeout);
-            } catch (const std::runtime_error& e) {
-              NODELET_ERROR("%s", e.what());
-            }
-
             // Subscribe to gain and white balance changes
             {
               std::lock_guard<std::mutex> scopedLock(connect_mutex_);

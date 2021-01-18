@@ -165,18 +165,6 @@ class SpinnakerCamera {
   void grabImage(sensor_msgs::Image* image, const std::string& frame_id);
 
   /*!
-  * \brief Will set grabImage timeout for the camera.
-  *
-  * This function will set the time required for grabCamera to throw a timeout
-  * exception.  Must be called after
-  * connect().
-  * \param timeout The desired timeout value (in seconds)
-  *
-  */
-  // TODO(mhosmar): Implement later
-  void setTimeout(const double& timeout);
-
-  /*!
   * \brief Used to set the serial number for the camera you wish to connect to.
   *
   * Sets the desired serial number.  If this value is not set, the driver will
@@ -241,7 +229,6 @@ class SpinnakerCamera {
   /// GigE packet delay:
   unsigned int packet_delay_ = 0;
 
-  uint64_t timeout_;
   // This function configures the camera to add chunk data to each image. It
   // does
   // this by enabling each type of chunk data before enabling chunk data mode.

@@ -343,7 +343,7 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
     try {
       // Since it takes time to initialize (i.e., enabling trigger) arduino
       // sync. Otherwise it will produce timeout error of this driver. Therefore
-      // give more time for grabbing an image by increasing timeout.
+      // default timeout infinite.
       Spinnaker::ImagePtr image_ptr = pCam_->GetNextImage();
       //  std::string format(image_ptr->GetPixelFormatName());
       //  std::printf("\033[100m format: %s \n", format.c_str());
@@ -450,9 +450,6 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
   }
 }  // end grabImage
 
-void SpinnakerCamera::setTimeout(const double& timeout) {
-  timeout_ = static_cast<uint64_t>(std::round(timeout * 1000));
-}
 void SpinnakerCamera::setDesiredCamera(const uint32_t& id) { serial_ = id; }
 
 void SpinnakerCamera::setGigEParameters(bool auto_packet_size,
