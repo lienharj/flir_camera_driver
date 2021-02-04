@@ -33,8 +33,9 @@ if(NOT Spinnaker_LIBRARIES)
 
 endif()
 
-message(STATUS "libSpinnaker library: ${Spinnaker_LIBRARIES}")
-message(STATUS "libSpinnaker include: ${Spinnaker_INCLUDE_DIRS}")
+message(INFO "Found system libSpinnaker")
+message(INFO "libSpinnaker library: ${Spinnaker_LIBRARIES}")
+message(INFO "libSpinnaker include: ${Spinnaker_INCLUDE_DIRS}")
 
 
 include_directories(SYSTEM
