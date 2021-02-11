@@ -1095,7 +1095,8 @@ void SpinnakerCamera::set_newest_only_buffer_stream(Spinnaker::CameraPtr cam_ptr
     {
       // Note exposure time is in micro-seconds
       // In settings, shutter is in ms so we need to perform a conversion
-      cam_ptr->ExposureTime.SetValue(8333.333f);
+      //cam_ptr->ExposureTime.SetValue(8333.333f);
+      cam_ptr->ExposureTime.SetValue(16667.666666667f);
       std::cout << "Set exposure time to [micro s]: " << cam_ptr->ExposureTime.GetValue() << std::endl;
     }
     else
