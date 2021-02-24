@@ -87,7 +87,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
-// For triggering from mavros
+#include <image_numbered_msgs/ImageNumbered.h>
 
 namespace spinnaker_camera_driver {
 class SpinnakerCameraNodelet : public nodelet::Nodelet {
@@ -346,6 +346,14 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
       if (publish_mono_) {
         it_mono_pub_ = it_->advertiseCamera("image_mono_raw", 5);
       }
+
+    // VERSAVIS stuff!!
+    ros::SubscriberStatusCallback cb3 =
+        boost::bind(&SpinnakerCameraNodelet::connectCb, this);
+    img_numbered_pub_ = nh.advertise<image_numbered_msgs::ImageNumbered>(
+        "image_numbered", 5, cb3, cb3);
+
+
       // Set up diagnostics
       updater_.setHardwareID("spinnaker_camera " + cinfo_name.str());
 
@@ -588,6 +596,16 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             if(publish_mono_) {
               publishMonoImage(image, ci_);
             }
+
+          if (img_numbered_pub_.getNumSubscribers() > 0) {
+              image_numbered_msgs::ImageNumberedPtr image(
+                  new image_numbered_msgs::ImageNumbered());
+              image->image = image->image;
+              image->number = spinnaker_.getFrameCounter();
+              // image->image.header.stamp += imu_time_offset_;
+              img_numbered_pub_.publish(image);
+            }
+
           } catch (CameraTimeoutException& e) {
             NODELET_WARN("%s", e.what());
           }
@@ -647,6 +665,9 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
   /// CameraInfoManager in scope.
   image_transport::CameraPublisher
       it_pub_;  ///< CameraInfoManager ROS publisher
+
+  ros::Publisher img_numbered_pub_;  ///< Image publisher that also publishes
+                                     ///the associated embedded frame number.
 
   image_transport::CameraPublisher it_mono_pub_;
 

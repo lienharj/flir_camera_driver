@@ -316,6 +316,11 @@ void SpinnakerCamera::stop() {
   }
 }
 
+uint64_t SpinnakerCamera::getFrameCounter(void) {
+  uint64_t ret = image_metadata_.GetFrameID();
+  return ret;
+}
+
 void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
                                 const std::string& frame_id) {
   std::lock_guard<std::mutex> scopedLock(mutex_);
