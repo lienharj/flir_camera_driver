@@ -598,12 +598,12 @@ class SpinnakerCameraNodelet : public nodelet::Nodelet {
             }
 
           if (img_numbered_pub_.getNumSubscribers() > 0) {
-              image_numbered_msgs::ImageNumberedPtr image(
+              image_numbered_msgs::ImageNumberedPtr image_numbered(
                   new image_numbered_msgs::ImageNumbered());
-              image->image = image->image;
-              image->number = spinnaker_.getFrameCounter();
+              image_numbered->image = *image;
+              image_numbered->number = spinnaker_.getFrameCounter();
               // image->image.header.stamp += imu_time_offset_;
-              img_numbered_pub_.publish(image);
+              img_numbered_pub_.publish(image_numbered);
             }
 
           } catch (CameraTimeoutException& e) {
