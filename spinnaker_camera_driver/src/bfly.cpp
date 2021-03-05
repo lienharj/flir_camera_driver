@@ -125,8 +125,10 @@ void BFly::setImageControlFormats(
   try {
     // Set Binning and Decimation
     setProperty(node_map_, "BinningVertical", config.image_format_y_binning);
-    setProperty(node_map_, "DecimationVertical",
-                config.image_format_y_decimation);
+
+    // TODO(rikba): This overwrites binning vertical...
+    //setProperty(node_map_, "DecimationVertical",
+    //            config.image_format_y_decimation);
 
     // Grab the Max values after decimation
     Spinnaker::GenApi::CIntegerPtr height_max_ptr =
