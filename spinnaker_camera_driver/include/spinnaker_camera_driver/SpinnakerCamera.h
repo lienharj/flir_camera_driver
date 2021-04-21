@@ -240,7 +240,7 @@ private:
   void ConfigureChunkData(const Spinnaker::GenApi::INodeMap& nodeMap);
 
   // Set buffer stream config to be NewestOnly for SLStudio
-  void set_newest_only_buffer_stream(Spinnaker::CameraPtr cam_ptr);
+  void SetNewestOnlyBuferStream(Spinnaker::CameraPtr cam_ptr);
 };
 }  // namespace spinnaker_camera_driver
 #endif  // SPINNAKER_CAMERA_DRIVER_SPINNAKERCAMERA_H

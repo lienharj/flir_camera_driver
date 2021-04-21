@@ -32,6 +32,7 @@ public:
   ~Gh3();
   void setFrameRate(const float frame_rate);
   void setNewConfiguration(const SpinnakerConfig& config, const uint32_t& level);
+  void setStructuredLightConfiguration(Spinnaker::CameraPtr cam_ptr);
 
 private:
   void setImageControlFormats(const spinnaker_camera_driver::SpinnakerConfig& config);
