@@ -216,9 +216,9 @@ void SpinnakerCamera::connect() {
 
     try {
 
-      pCam_->TLStream.StreamDefaultBufferCountMode.SetValue(Spinnaker::StreamDefaultBufferCountMode_Manual);
-      pCam_->TLStream.StreamBufferHandlingMode.SetValue(Spinnaker::StreamBufferHandlingMode_NewestFirstOverwrite);
-      pCam_->TLStream.StreamDefaultBufferCount.SetValue(1);
+      pCam_->TLStream.StreamBufferCountMode.SetValue(Spinnaker::StreamBufferCountMode_Manual);
+      pCam_->TLStream.StreamBufferHandlingMode.SetValue(Spinnaker::StreamBufferHandlingMode_NewestOnly);
+      pCam_->TLStream.StreamBufferCountManual.SetValue(3);
 
       // Initialize Camera
       pCam_->Init();
@@ -316,6 +316,11 @@ void SpinnakerCamera::stop() {
   }
 }
 
+uint64_t SpinnakerCamera::getFrameCounter(void) {
+  uint64_t ret = image_metadata_.GetFrameID();
+  return ret;
+}
+
 void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
                                 const std::string& frame_id) {
   std::lock_guard<std::mutex> scopedLock(mutex_);
@@ -324,6 +329,10 @@ void SpinnakerCamera::grabImage(sensor_msgs::Image* image,
   if (pCam_ && captureRunning_) {
     // Handle "Image Retrieval" Exception
     try {
+      // Since it takes time to initialize (i.e., enabling trigger) arduino
+      // sync. Otherwise it will produce timeout error of this driver. Therefore
+      // give more time for grabbing an image by increasing timeout.
+      timeout_ = 60000;  // 60secs
 
       Spinnaker::ImagePtr image_ptr = pCam_->GetNextImage(timeout_);
       //  std::string format(image_ptr->GetPixelFormatName());

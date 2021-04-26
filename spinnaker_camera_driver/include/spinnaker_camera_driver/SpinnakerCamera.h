@@ -152,6 +152,9 @@ class SpinnakerCamera {
   */
   void stop();
 
+
+  uint64_t getFrameCounter();
+
   /*!
   * \brief Loads the raw data from the cameras buffer.
   *
