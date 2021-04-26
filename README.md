@@ -1,5 +1,10 @@
 # flir_camera_driver
 
+## Note about QT5 problems after installing spinnaker
+Tip when installing spinnaker: Only install the actual library and not libspinview etc, as it pulls in QT dependencies that might break things on your system.
+
+To do so, modify the install script (install_spinnaker.sh) to not include any of the spinvideo/spinview packages (on line 38 and following)
+
 ## How to install
 https://eu.ptgrey.com/support/downloads/11048/  
 ```sudo apt install libunwind8-dev```
